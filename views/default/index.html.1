@@ -1,0 +1,45 @@
+{{extend 'layout.html'}}
+<body>
+<ul class="nav nav-pills nav-justified">
+  <li role="presentation" class="active"><a href="{{=URL(c='default',f='index')}}">Home</a></li>
+  <li role="presentation"><a href="{{=URL(c='default',f='googleFinance')}}">Stock Price</a></li>
+  <li role="presentation"><a href="{{=URL(c='default',f='twitterMentions')}}">Twitter Mentions</a></li>
+  <li role="presentation"><a href="{{=URL(c='default',f='ccextractor')}}">TV Mentions</a></li>
+</ul>
+<br>
+<div class="dropdown">
+  <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+    {{if len(request.args)>0:}}
+      {{=request.args[0].capitalize()}}
+    {{else:}}
+      Select the Company
+    {{pass}}
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+    {{for i in listCompany():}}
+    {{if len(request.args)>0 and request.args[0]==i[0].lower():}}
+    {{else:}}
+    <li>{{=A(i[0], callback = URL(c='default',f='dataPictures',args=['full',str(i[0].lower())]), target="dataPics")}}</li>
+    {{pass}}
+    {{pass}}
+  </ul>
+</div>
+<div>
+{{companies = listCompany()}}
+{{if len(request.args)>0:}}
+{{for company in companies:}}
+{{if company[0].lower() == request.args[0]:}}
+<p>{{=company}}</p>
+{{pass}}
+{{pass}}
+{{pass}}
+<br>
+</div>
+<div id="dataPics" style="border: solid 2px;">
+    <ul>
+    <li><h3>Select the Company that you want the statistics for.</h3></li>
+    <li><h3>Select the type of statistics from the Tabs on the top.</h3></li>
+    </ul>
+</div>
+</body>

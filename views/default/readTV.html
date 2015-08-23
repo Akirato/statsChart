@@ -1,0 +1,29 @@
+{{extend 'layout.html'}}
+<ul class="nav nav-pills nav-justified">
+  <li role="presentation"><a href="{{=URL(c='default',f='index')}}">Home</a></li>
+  <li role="presentation"><a href="{{=URL(c='default',f='googleFinance')}}">Stock Price</a></li>
+  <li role="presentation"><a href="{{=URL(c='default',f='twitterMentions')}}">Twitter Mentions</a></li>
+  <li role="presentation"><a href="{{=URL(c='default',f='ccextractor')}}">TV Mentions</a></li>
+  <li role="presentation"><a href="{{=URL(c='default',f='readTwitter')}}">Sentiments-Twitter</a></li>
+  <li role="presentation" class="active"><a href="{{=URL(c='default',f='readTV')}}">Sentiments-TV Mentions </a></li>
+</ul>
+<br>
+
+{{if lines==None:}}
+<h3>
+    No data available
+</h3>
+{{else:}}
+{{count=0}}
+{{for line in lines:}}
+<ul>
+<li>
+    {{if count%2 == 0:}}
+    <h5>{{=line}}</h5>
+    {{else:}}
+    <h5><b>{{=line}}</b></h5>
+    {{pass}}
+</li></ul>
+{{count+=1}}
+{{pass}}
+{{pass}}

@@ -1,0 +1,166 @@
+# -*- coding: utf-8 -*-
+# this file is released under public domain and you can use without limitations
+
+#########################################################################
+## This is a sample controller
+## - index is the default action of any application
+## - user is required for authentication and authorization
+## - download is for downloading files uploaded in the db (does streaming)
+#########################################################################
+import pygal
+from pygal.style import CleanStyle
+from datetime import datetime, timedelta
+import codecs,os
+
+def index():
+    return dict()
+
+def dataPictures():
+    if len(request.args)>1 and request.args[0]=='full':
+        rowsTwitter = db(db.twitterstats.company == (request.args[1]).capitalize()).select(orderby=~db.twitterstats.update_time)
+        rowsCCEx = db(db.ccextstats.company == (request.args[1]).capitalize()).select(orderby=~db.ccextstats.update_time)
+        if len(rowsTwitter)>11:
+            rowsTwitter=rowsTwitter[0:11]
+        if len(rowsCCEx)>11:
+            rowsCCEx=rowsCCEx[0:11]
+        datesTwitter,positiveTwitter,negativeTwitter = [],[],[]
+        datesCCEx,positiveCCEx,negativeCCEx = [],[],[]
+        for rowTwitter in rowsTwitter:
+            datesTwitter.append(rowTwitter.update_time)
+            positiveTwitter.append(rowTwitter.positive)
+            negativeTwitter.append(rowTwitter.negative)
+        for rowCCEx in rowsCCEx:
+            positiveCCEx.append(rowCCEx.positive)
+            negativeCCEx.append(rowCCEx.negative)
+        positiveTwitter.reverse()
+        negativeTwitter.reverse()
+        datesTwitter.reverse()
+        positiveCCEx.reverse()
+        negativeCCEx.reverse()
+        datesCCEx.reverse()
+        date_chart = pygal.Line(x_label_rotation=20)
+        date_chart.x_labels = datesTwitter
+        date_chart.add("Negative-Twitter", negativeTwitter)
+        date_chart.add("Positive-Twitter", positiveTwitter)
+        date_chart.add("Negative-CCExtractor", negativeCCEx)
+        date_chart.add("Positive-CCExtractor", positiveCCEx)
+        return date_chart.render()
+
+    if len(request.args)>1 and request.args[0]=='twitter':
+        rowsTwitter = db(db.twitterstats.company == (request.args[1]).capitalize()).select(orderby=~db.twitterstats.update_time)
+        if len(rowsTwitter)>11:
+            rowsTwitter=rowsTwitter[0:11]
+        datesTwitter,positiveTwitter,negativeTwitter = [],[],[]
+        for rowTwitter in rowsTwitter:
+            datesTwitter.append(rowTwitter.update_time)
+            positiveTwitter.append(rowTwitter.positive)
+            negativeTwitter.append(rowTwitter.negative)
+        positiveTwitter.reverse()
+        negativeTwitter.reverse()
+        datesTwitter.reverse()
+        date_chart = pygal.Line(x_label_rotation=20)
+        date_chart.x_labels = datesTwitter
+        date_chart.add("Negative-Twitter", negativeTwitter)
+        date_chart.add("Positive-Twitter", positiveTwitter)
+        return date_chart.render()
+
+    if len(request.args)>1 and request.args[0]=='tv':
+        rowsCCEx = db(db.ccextstats.company == (request.args[1]).capitalize()).select(orderby=~db.ccextstats.update_time)
+        if len(rowsCCEx)>11:
+            rowsCCEx=rowsCCEx[0:11]
+        datesCCEx,positiveCCEx,negativeCCEx = [],[],[]
+        for rowCCEx in rowsCCEx:
+            positiveCCEx.append(rowCCEx.positive)
+            negativeCCEx.append(rowCCEx.negative)
+            datesCCEx.append(rowCCEx.update_time)
+        positiveCCEx.reverse()
+        negativeCCEx.reverse()
+        datesCCEx.reverse()
+        date_chart = pygal.Line(x_label_rotation=20)
+        date_chart.x_labels = datesCCEx
+        date_chart.add("Negative-CCExtractor", negativeCCEx)
+        date_chart.add("Positive-CCExtractor", positiveCCEx)
+        return date_chart.render()
+
+    if len(request.args)>1 and request.args[0]=='finance':
+        rowsFinance = db(db.financedata.company == (request.args[1]).capitalize()).select(orderby=~db.financedata.update_time)
+        if len(rowsFinance)>11:
+            rowsFinance = rowsFinance[0:11]
+        datesFinance,stockFinance = [],[]
+        for rowFinance in rowsFinance:
+            stockFinance.append(rowFinance.stockdata)
+            datesFinance.append(rowFinance.update_time)
+        stockFinance.reverse()
+        datesFinance.reverse()
+        date_chart = pygal.Line(x_label_rotation=20)
+        date_chart.x_labels = datesFinance
+        date_chart.add("Stock Price", stockFinance)
+        return date_chart.render()
+    return None
+
+def googleFinance():
+    return dict()
+
+def ccextractor():
+    return dict()
+
+def twitterMentions():
+    return dict()
+
+def readTwitter():
+    #try:
+        openfile = codecs.open("/home/www-data/web2py/twitterData",'r',encoding='utf-8')
+        data = openfile.read()
+        lines = data.splitlines()
+        if len(lines)>9:
+            lines = lines[-10:]
+        return dict(lines=lines)
+    #except:
+    #    return dict(lines=None)
+
+def readTV():
+    try:
+        openfile = codecs.open("/home/www-data/web2py/ccextrData",'r',encoding='utf-8')
+        data = openfile.read()
+        lines = data.splitlines()
+        if len(lines)>19:
+            lines = lines[-20:]
+        return dict(lines=lines)
+    except:
+        return dict(lines=None)
+
+def user():
+    """
+    exposes
+    http://..../[app]/default/user/login
+    http://..../[app]/default/user/logout
+    http://..../[app]/default/user/register
+    http://..../[app]/default/user/profile
+    http://..../[app]/default/user/retrieve_password
+    http://..../[app]/default/user/change_password
+    http://..../[app]/default/user/manage_users (requires membership in
+    use @auth.requires_login()
+        @auth.requires_membership('group name')
+        @auth.requires_permission('read','table name',record_id)
+    to decorate functions that need access control
+    """
+    return dict(form=auth())
+
+
+@cache.action()
+def download():
+    """
+    allows downloading of uploaded files
+    http://..../[app]/default/download/[filename]
+    """
+    return response.download(request, db)
+
+
+def call():
+    """
+    exposes services. for example:
+    http://..../[app]/default/call/jsonrpc
+    decorate with @services.jsonrpc the functions to expose
+    supports xml, json, xmlrpc, jsonrpc, amfrpc, rss, csv
+    """
+    return service()
